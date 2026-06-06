@@ -56,7 +56,7 @@ function WallItem({ m, isMobile }: { m: WallMark, isMobile: boolean }) {
         <div
           style={{
             fontFamily: 'var(--serif)',
-            fontSize: isMobile ? 11 : 18,
+            fontSize: isMobile ? 13 : 18,
             fontStyle: 'italic',
             color: hovered ? 'var(--bone)' : 'rgba(217, 197, 160, 0.65)',
             maxWidth: isMobile ? 140 : 240,
@@ -110,7 +110,7 @@ export default function TheWall() {
       all.sort((a, b) => b.timestamp - a.timestamp)
 
       const COUNT = all.length
-      const MARK_SLOT = isMobile ? 160 : 80
+      const MARK_SLOT = isMobile ? 110 : 80
       const TOTAL_H = Math.max(900, COUNT * MARK_SLOT + 400)
       const COLS = isMobile ? 2 : 4
 
