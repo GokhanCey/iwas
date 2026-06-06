@@ -128,20 +128,17 @@ export default function Leave() {
 
     try {
       let blob: Blob
-      let mimeType: string
       let markType: MarkType
       let rawText: string | null = null
 
       if (mode === 'text') {
         rawText  = textContent
         blob     = new Blob([textContent], { type: 'text/plain' })
-        mimeType = 'text/plain'
         markType = 'text'
       } else if (mode === 'drawing' && canvasRef.current) {
         const dataUrl = canvasRef.current.toDataURL('image/png')
         const res     = await fetch(dataUrl)
         blob     = await res.blob()
-        mimeType = 'image/png'
         markType = 'drawing'
       } else {
         return

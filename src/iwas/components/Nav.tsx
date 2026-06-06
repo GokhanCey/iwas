@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { ConnectModal, useCurrentAccount, useDisconnectWallet } from '@mysten/dapp-kit'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import logoImg from '../../assets/IWAS-logo-transparent.png'
 
 export default function Nav() {
