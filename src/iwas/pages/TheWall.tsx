@@ -26,7 +26,7 @@ interface WallMark extends Mark {
 }
 
 // ── Inline hover component so we can use React state ──────────
-function WallItem({ m }: { m: WallMark }) {
+function WallItem({ m, isMobile }: { m: WallMark, isMobile: boolean }) {
   const [hovered, setHovered] = useState(false)
 
   const baseTransform = `translate(-50%, -50%) rotate(${m.rotation}deg) scale(${m.scale})`
@@ -56,10 +56,10 @@ function WallItem({ m }: { m: WallMark }) {
         <div
           style={{
             fontFamily: 'var(--serif)',
-            fontSize: 18,
+            fontSize: isMobile ? 11 : 18,
             fontStyle: 'italic',
             color: hovered ? 'var(--bone)' : 'rgba(217, 197, 160, 0.65)',
-            maxWidth: 240,
+            maxWidth: isMobile ? 140 : 240,
             textAlign: 'center',
             lineHeight: 1.4,
             transition: 'color 0.2s ease',
@@ -74,8 +74,8 @@ function WallItem({ m }: { m: WallMark }) {
           src={walrusBlobUrl(m.blobId)}
           alt="cave drawing"
           style={{
-            maxWidth: 160,
-            maxHeight: 160,
+            maxWidth: isMobile ? 80 : 160,
+            maxHeight: isMobile ? 80 : 160,
             objectFit: 'contain',
             opacity: hovered ? 1 : 0.8,
             filter: 'contrast(1.1) sepia(0.2) brightness(0.95)',
@@ -93,7 +93,14 @@ function WallItem({ m }: { m: WallMark }) {
 export default function TheWall() {
   const [marks, setMarks] = useState<WallMark[]>([])
   const [maxHeight, setMaxHeight] = useState(1000)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const suiClient = useSuiClient()
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     async function loadMarks() {
@@ -103,14 +110,14 @@ export default function TheWall() {
       all.sort((a, b) => b.timestamp - a.timestamp)
 
       const COUNT = all.length
-      const MARK_SLOT = 80
+      const MARK_SLOT = isMobile ? 160 : 80
       const TOTAL_H = Math.max(900, COUNT * MARK_SLOT + 400)
-      const COLS = 4
+      const COLS = isMobile ? 2 : 4
 
       const wallMarks: WallMark[] = all.map((m, i) => {
         const rng = seededRandom(m.blobId)
-        const safeMin = m.type === 'text' ? 15 : 12
-        const safeMax = m.type === 'text' ? 85 : 88
+        const safeMin = m.type === 'text' ? (isMobile ? 25 : 15) : (isMobile ? 20 : 12)
+        const safeMax = m.type === 'text' ? (isMobile ? 75 : 85) : (isMobile ? 80 : 88)
         const range = safeMax - safeMin
         const COL_W = range / COLS
 
@@ -154,7 +161,7 @@ export default function TheWall() {
     }
 
     loadMarks()
-  }, [suiClient])
+  }, [suiClient, isMobile])
 
   return (
     <div className="iwas-root" style={{ backgroundColor: '#050403' }}>
@@ -214,7 +221,7 @@ export default function TheWall() {
           </div>
         )}
 
-        {marks.map(m => <WallItem key={m.blobId} m={m} />)}
+        {marks.map(m => <WallItem key={m.blobId} m={m} isMobile={isMobile} />)}
       </div>
     </div>
   )
