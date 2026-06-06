@@ -30,11 +30,11 @@ export interface Mark {
 function mapOnChainMark(data: any): Mark {
   return {
     blobId: data.blob_id,
-    type: 'drawing', // Default fallback, or infer from blobId if needed
+    type: data.mark_type as MarkType,
     category: data.emotion as EmotionCategory,
     timestamp: parseInt(data.timestamp, 10),
     walletAddress: data.wallet_address,
-    mimeType: 'image/png', // Default
+    mimeType: data.mark_type === 'text' ? 'text/plain' : 'image/png',
     narrative: 'A mark left in the permanence of now.',
   }
 }
@@ -73,6 +73,7 @@ export async function getMarkById(suiClient: SuiClient, blobId: string): Promise
 // Builds the transaction block for adding a mark
 export function buildAddMarkTx(
   blobId: string,
+  markType: string,
   emotion: string,
   timestamp: number
 ): Transaction {
@@ -83,6 +84,7 @@ export function buildAddMarkTx(
     arguments: [
       tx.object(IWAS_WALL_OBJECT_ID),
       tx.pure.string(blobId),
+      tx.pure.string(markType),
       tx.pure.string(emotion),
       tx.pure.u64(timestamp)
     ]

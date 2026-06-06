@@ -163,7 +163,7 @@ export default function Leave() {
 
       // Step 4 — persist to Sui blockchain
       setStampStatus('Engraving on The Wall...')
-      const tx = buildAddMarkTx(blobId, result.emotion, Date.now())
+      const tx = buildAddMarkTx(blobId, markType, result.emotion, Date.now())
       await signAndExecuteTransaction({ transaction: tx as any })
 
       setStampedBlobId(blobId)
