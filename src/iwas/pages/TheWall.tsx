@@ -29,8 +29,8 @@ interface WallMark extends Mark {
 function WallItem({ m, isMobile }: { m: WallMark, isMobile: boolean }) {
   const [hovered, setHovered] = useState(false)
 
-  const baseTransform = `translate(-50%, -50%) rotate(${m.rotation}deg) scale(${m.scale})`
-  const hoverTransform = `translate(-50%, -50%) rotate(${m.rotation}deg) scale(${m.scale * 1.4})`
+  const baseTransform = isMobile ? 'none' : `translate(-50%, -50%) rotate(${m.rotation}deg) scale(${m.scale})`
+  const hoverTransform = isMobile ? 'scale(1.05)' : `translate(-50%, -50%) rotate(${m.rotation}deg) scale(${m.scale * 1.4})`
 
   return (
     <Link
@@ -39,9 +39,9 @@ function WallItem({ m, isMobile }: { m: WallMark, isMobile: boolean }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        position: 'absolute',
-        left: `clamp(${m.type === 'text' ? '150px' : '100px'}, ${m.x}%, calc(100vw - ${m.type === 'text' ? '150px' : '100px'}))`,
-        top: `${m.y}px`,
+        position: isMobile ? 'relative' : 'absolute',
+        left: isMobile ? 'auto' : `clamp(${m.type === 'text' ? '150px' : '100px'}, ${m.x}%, calc(100vw - ${m.type === 'text' ? '150px' : '100px'}))`,
+        top: isMobile ? 'auto' : `${m.y}px`,
         transform: hovered ? hoverTransform : baseTransform,
         transition: 'transform 0.25s ease, z-index 0s',
         zIndex: hovered ? 999 : 10,
@@ -50,16 +50,17 @@ function WallItem({ m, isMobile }: { m: WallMark, isMobile: boolean }) {
         alignItems: 'center',
         textDecoration: 'none',
         cursor: 'pointer',
+        margin: isMobile ? '32px 0' : '0'
       }}
     >
       {m.type === 'text' ? (
         <div
           style={{
             fontFamily: 'var(--serif)',
-            fontSize: isMobile ? 13 : 21,
+            fontSize: isMobile ? 18 : 21,
             fontStyle: 'italic',
             color: hovered ? 'var(--bone)' : 'rgba(217, 197, 160, 0.65)',
-            maxWidth: isMobile ? 140 : 240,
+            maxWidth: isMobile ? 280 : 240,
             textAlign: 'center',
             lineHeight: 1.4,
             transition: 'color 0.2s ease',
@@ -74,8 +75,8 @@ function WallItem({ m, isMobile }: { m: WallMark, isMobile: boolean }) {
           src={walrusBlobUrl(m.blobId)}
           alt="cave drawing"
           style={{
-            maxWidth: isMobile ? 80 : 160,
-            maxHeight: isMobile ? 80 : 160,
+            maxWidth: isMobile ? 180 : 160,
+            maxHeight: isMobile ? 180 : 160,
             objectFit: 'contain',
             opacity: hovered ? 1 : 0.8,
             filter: 'contrast(1.1) sepia(0.2) brightness(0.95)',
@@ -116,9 +117,14 @@ export default function TheWall() {
       const wallMarks: WallMark[] = []
 
       all.forEach((m, i) => {
+        if (isMobile) {
+          wallMarks.push({ ...m, x: 50, y: 0, scale: 1, rotation: 0 })
+          return
+        }
+
         const rng = seededRandom(m.blobId)
-        const safeMin = m.type === 'text' ? (isMobile ? 25 : 15) : (isMobile ? 20 : 12)
-        const safeMax = m.type === 'text' ? (isMobile ? 75 : 85) : (isMobile ? 80 : 88)
+        const safeMin = m.type === 'text' ? 15 : 12
+        const safeMax = m.type === 'text' ? 85 : 88
         const range = safeMax - safeMin
         const COL_W = range / COLS
 
@@ -194,9 +200,15 @@ export default function TheWall() {
         style={{
           position: 'relative',
           width: '100%',
-          height: `${maxHeight}px`,
-          overflow: 'hidden',
+          minHeight: '100vh',
+          height: isMobile ? 'auto' : `${maxHeight}px`,
+          overflow: isMobile ? 'visible' : 'hidden',
           background: '#050403',
+          display: isMobile ? 'flex' : 'block',
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems: isMobile ? 'center' : 'stretch',
+          paddingTop: isMobile ? '120px' : '0',
+          paddingBottom: isMobile ? '120px' : '0',
         }}
       >
         <div style={{
