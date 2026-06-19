@@ -112,7 +112,10 @@ export default function TheWall() {
       const TOTAL_H = Math.max(900, COUNT * MARK_SLOT + 400)
       const COLS = isMobile ? 2 : 4
 
-      const wallMarks: WallMark[] = all.map((m, i) => {
+      const windowWidth = window.innerWidth
+      const wallMarks: WallMark[] = []
+
+      all.forEach((m, i) => {
         const rng = seededRandom(m.blobId)
         const safeMin = m.type === 'text' ? (isMobile ? 25 : 15) : (isMobile ? 20 : 12)
         const safeMax = m.type === 'text' ? (isMobile ? 75 : 85) : (isMobile ? 80 : 88)
@@ -122,16 +125,37 @@ export default function TheWall() {
         const colIndex = (i * 7 + Math.floor(rng() * 3)) % COLS
         const colMin = safeMin + colIndex * COL_W
         const colMax = colMin + COL_W
-        const x = colMin + rng() * (colMax - colMin)
 
         const slotY = (i / Math.max(1, COUNT - 1)) * (TOTAL_H - 400) + 180
-        const jitter = (rng() - 0.5) * MARK_SLOT * 0.5
-        const y = Math.max(180, Math.min(TOTAL_H - 120, slotY + jitter))
-
+        
+        let x = 0
+        let y = 0
         const scale = 0.72 + rng() * 0.45
         const rotation = -10 + rng() * 20
 
-        return { ...m, x, y, scale, rotation }
+        let attempts = 0
+        let collision = true
+
+        while (collision && attempts < 50) {
+          x = colMin + rng() * (colMax - colMin)
+          // increase jitter spread on higher attempts to find empty space
+          const jitterSpread = MARK_SLOT * (0.5 + (attempts * 0.2))
+          const jitter = (rng() - 0.5) * jitterSpread
+          y = Math.max(180, Math.min(TOTAL_H - 120, slotY + jitter))
+
+          collision = false
+          for (const placed of wallMarks) {
+            const dxPx = Math.abs((x - placed.x) / 100 * windowWidth)
+            const dyPx = Math.abs(y - placed.y)
+            if (dxPx < 150 && dyPx < 200) {
+              collision = true
+              break
+            }
+          }
+          attempts++
+        }
+
+        wallMarks.push({ ...m, x, y, scale, rotation })
       })
 
       setMaxHeight(TOTAL_H)
