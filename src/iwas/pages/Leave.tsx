@@ -214,6 +214,17 @@ export default function Leave() {
 
           <div className="stamp-blob-id-large">{stampedBlobId}</div>
           <p className="stamp-permanence">This exists now. It will exist after you.</p>
+          <p style={{
+            fontFamily: 'var(--mono)',
+            fontSize: 11,
+            color: 'var(--bone-dim)',
+            marginTop: -8,
+            marginBottom: 24,
+            opacity: 0.6,
+            textAlign: 'center'
+          }}>
+            stored for 183 days on testnet. on mainnet, marks last up to 2 years per cycle — renewable indefinitely in SUI.
+          </p>
 
           <a
             href={`https://aggregator.walrus-testnet.walrus.space/v1/blobs/${stampedBlobId}`}
