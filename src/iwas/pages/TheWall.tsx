@@ -104,9 +104,7 @@ export default function TheWall() {
 
   useEffect(() => {
     async function loadMarks() {
-      const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000
       let all = await getAllMarks(suiClient)
-      all = all.filter(m => m.timestamp > thirtyDaysAgo)
       all.sort((a, b) => b.timestamp - a.timestamp)
 
       const COUNT = all.length
