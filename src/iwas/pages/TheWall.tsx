@@ -150,7 +150,7 @@ export default function TheWall() {
               setMarks(prev => prev.map(p => p.blobId === m.blobId ? { ...p, textContent: text } : p))
             })
             .catch(() => {
-              setMarks(prev => prev.filter(p => p.blobId !== m.blobId))
+              setMarks(prev => prev.map(p => p.blobId === m.blobId ? { ...p, textContent: '[Faded from memory]' } : p))
             })
         }
       })
