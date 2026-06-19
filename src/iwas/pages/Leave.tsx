@@ -223,7 +223,7 @@ export default function Leave() {
             opacity: 0.6,
             textAlign: 'center'
           }}>
-            stored for 183 days on testnet. on mainnet, marks last up to 2 years per cycle — renewable indefinitely in SUI.
+            stored for 50 days on testnet. on mainnet, marks last up to 2 years per cycle — renewable indefinitely in SUI.
           </p>
 
           <a

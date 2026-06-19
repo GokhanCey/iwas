@@ -1,6 +1,6 @@
 import type { EmotionCategory } from './storage'
 
-const WALRUS_PUBLISHER = 'https://publisher.walrus-testnet.walrus.space/v1/blobs?epochs=183'
+const WALRUS_PUBLISHER = 'https://publisher.walrus-testnet.walrus.space/v1/blobs?epochs=50'
 export const WALRUS_AGGREGATOR = 'https://aggregator.walrus-testnet.walrus.space/v1/blobs'
 
 export const EMOTIONS: EmotionCategory[] = [
