@@ -182,21 +182,21 @@ export default function TheWall() {
           
           // Dynamic collision box sizing based on content
           const textLen = m.textContent ? m.textContent.length : 0
-          const reqWidth = m.type === 'text' ? Math.min(300, Math.max(180, textLen * 4.5)) : 180
+          const reqWidth = m.type === 'text' ? Math.min(300, Math.max(180, textLen * 4.5)) : 220
           const lines = textLen ? Math.ceil(textLen / 25) : 1
-          const reqHeight = m.type === 'text' ? Math.max(120, lines * 35 + 80) : 180
+          const reqHeight = m.type === 'text' ? Math.max(120, lines * 35 + 80) : 220
 
           for (const placed of wallMarks) {
             const dxPx = Math.abs((x - placed.x) / 100 * windowWidth)
             const dyPx = Math.abs(y - placed.y)
             
             const placedLen = placed.textContent ? placed.textContent.length : 0
-            const placedWidth = placed.type === 'text' ? Math.min(300, Math.max(180, placedLen * 4.5)) : 180
+            const placedWidth = placed.type === 'text' ? Math.min(300, Math.max(180, placedLen * 4.5)) : 220
             const placedLines = placedLen ? Math.ceil(placedLen / 25) : 1
-            const placedHeight = placed.type === 'text' ? Math.max(120, placedLines * 35 + 80) : 180
+            const placedHeight = placed.type === 'text' ? Math.max(120, placedLines * 35 + 80) : 220
 
-            const minDx = (reqWidth + placedWidth) / 2 + 50 // 50px extra horizontal buffer
-            const minDy = (reqHeight + placedHeight) / 2 + 60 // 60px extra vertical buffer
+            const minDx = (reqWidth + placedWidth) / 2 + 80 // Increased horizontal buffer
+            const minDy = (reqHeight + placedHeight) / 2 + 90 // Increased vertical buffer
             
             if (dxPx < minDx && dyPx < minDy) {
               collision = true
@@ -278,29 +278,7 @@ export default function TheWall() {
           </span>
         </div>
 
-        {marks.length === 0 && (
-          <div style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            textAlign: 'center',
-            width: '100%',
-            padding: '0 24px',
-          }}>
-            <p style={{
-              fontFamily: 'var(--serif)',
-              fontSize: 20,
-              fontStyle: 'italic',
-              color: 'var(--bone-dim)',
-              marginBottom: 24,
-              opacity: 0.6,
-            }}>
-              The wall grows with every mark left.
-            </p>
-            <Link to="/leave" className="btn-ochre">Leave the first mark</Link>
-          </div>
-        )}
+
 
         {marks.map(m => <WallItem key={m.blobId} m={m} isMobile={isMobile} />)}
       </div>
