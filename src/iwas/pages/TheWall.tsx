@@ -120,31 +120,14 @@ export default function TheWall() {
       let all = rawMarks as (Mark & { textContent?: string })[]
       all.sort((a, b) => b.timestamp - a.timestamp)
 
-      const COUNT = all.length
-      const MARK_SLOT = isMobile ? 55 : 64
-      const TOTAL_H = Math.max(900, COUNT * MARK_SLOT + 400)
-      const COLS = isMobile ? 2 : 4
-
-      // Fetch text contents FIRST so we can measure them for collision
-      if (!isMobile) {
-        await Promise.all(all.map(async (m) => {
-          if (m.type === 'text') {
-            try {
-              const r = await fetch(walrusBlobUrl(m.blobId))
-              if (!r.ok) throw new Error()
-              const text = await r.text()
-              if (text.startsWith('{"error"')) throw new Error()
-              m.textContent = text
-            } catch {
-              m.textContent = 'no one chose to remember'
-            }
-          }
-        }))
-      }
-
       const windowWidth = window.innerWidth
+      const COLS = isMobile ? 1 : Math.max(2, Math.floor(windowWidth / 350))
+      const colHeights = new Array(COLS).fill(180) // 180px top padding
+
       const wallMarks: WallMark[] = []
 
+      // Marks are already sorted by timestamp (newest first).
+      // We place them chronologically into the shortest available column.
       all.forEach((m, i) => {
         if (isMobile) {
           wallMarks.push({ ...m, x: 50, y: 0, scale: 1, rotation: 0 })
@@ -152,63 +135,44 @@ export default function TheWall() {
         }
 
         const rng = seededRandom(m.blobId)
-        const safeMin = m.type === 'text' ? 15 : 12
-        const safeMax = m.type === 'text' ? 85 : 88
-        const range = safeMax - safeMin
-        const COL_W = range / COLS
 
-        const colIndex = (i * 7 + Math.floor(rng() * 3)) % COLS
-        const colMin = safeMin + colIndex * COL_W
-        const colMax = colMin + COL_W
+        // 1. Measure: Calculate footprint based on content
+        const textLen = m.textContent ? m.textContent.length : 0
+        const reqWidth = m.type === 'text' ? Math.min(300, Math.max(180, textLen * 4.5)) : 220
+        const lines = textLen ? Math.ceil(textLen / 25) : 1
+        const reqHeight = m.type === 'text' ? Math.max(120, lines * 35 + 80) : 220
 
-        const slotY = (i / Math.max(1, COUNT - 1)) * (TOTAL_H - 400) + 180
+        // 2. Find shortest column
+        let minCol = 0
+        let minH = colHeights[0]
+        for (let c = 1; c < COLS; c++) {
+          if (colHeights[c] < minH) {
+            minCol = c
+            minH = colHeights[c]
+          }
+        }
+
+        // 3. Place: Calculate Grid Cell center and add cosmetic jitter
+        const colWidthPct = 100 / COLS
+        const baseX = (minCol * colWidthPct) + (colWidthPct / 2)
         
-        let x = 0
-        let y = 0
+        // Jitter within the column bounds (max +/- 20% of col width)
+        const jitterX = (rng() - 0.5) * (colWidthPct * 0.4)
+        const x = Math.max(5, Math.min(95, baseX + jitterX))
+        
+        // y is the shortest column height + organic jitter (0 to 40px)
+        const y = minH + (rng() * 40)
+
         const scale = 0.72 + rng() * 0.45
         const rotation = -10 + rng() * 20
 
-        let attempts = 0
-        let collision = true
-
-        while (collision && attempts < 50) {
-          x = colMin + rng() * (colMax - colMin)
-          // increase jitter spread on higher attempts to find empty space
-          const jitterSpread = MARK_SLOT * (0.5 + (attempts * 0.2))
-          const jitter = (rng() - 0.5) * jitterSpread
-          y = Math.max(180, Math.min(TOTAL_H - 120, slotY + jitter))
-
-          collision = false
-          
-          // Dynamic collision box sizing based on content
-          const textLen = m.textContent ? m.textContent.length : 0
-          const reqWidth = m.type === 'text' ? Math.min(300, Math.max(180, textLen * 4.5)) : 220
-          const lines = textLen ? Math.ceil(textLen / 25) : 1
-          const reqHeight = m.type === 'text' ? Math.max(120, lines * 35 + 80) : 220
-
-          for (const placed of wallMarks) {
-            const dxPx = Math.abs((x - placed.x) / 100 * windowWidth)
-            const dyPx = Math.abs(y - placed.y)
-            
-            const placedLen = placed.textContent ? placed.textContent.length : 0
-            const placedWidth = placed.type === 'text' ? Math.min(300, Math.max(180, placedLen * 4.5)) : 220
-            const placedLines = placedLen ? Math.ceil(placedLen / 25) : 1
-            const placedHeight = placed.type === 'text' ? Math.max(120, placedLines * 35 + 80) : 220
-
-            const minDx = (reqWidth + placedWidth) / 2 + 80 // Increased horizontal buffer
-            const minDy = (reqHeight + placedHeight) / 2 + 90 // Increased vertical buffer
-            
-            if (dxPx < minDx && dyPx < minDy) {
-              collision = true
-              break
-            }
-          }
-          attempts++
-        }
-
         wallMarks.push({ ...m, x, y, scale, rotation })
+
+        // 4. Update the column's height with the mark's true height + buffer
+        colHeights[minCol] = y + reqHeight + 40
       })
 
+      const TOTAL_H = isMobile ? 900 : Math.max(900, Math.max(...colHeights) + 200)
       setMaxHeight(TOTAL_H)
       
       // On mobile, we didn't pre-fetch text to save time since there's no collision logic, so fetch it now
