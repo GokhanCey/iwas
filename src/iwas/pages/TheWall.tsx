@@ -66,7 +66,18 @@ function WallItem({ m, isMobile }: { m: WallMark, isMobile: boolean }) {
             transition: 'color 0.2s ease',
           }}
         >
-          {m.textContent
+          {m.textContent === 'no one chose to remember' ? (
+            <span>
+              {m.textContent.split(' ').map((word, i) => {
+                const opacities = [0.4, 0.15, 0.5, 0.2, 0.45]
+                return (
+                  <span key={i} style={{ opacity: hovered ? 1 : opacities[i], transition: 'opacity 0.5s ease' }}>
+                    {word}{' '}
+                  </span>
+                )
+              })}
+            </span>
+          ) : m.textContent
             ? m.textContent.slice(0, 80) + (m.textContent.length > 80 ? '…' : '')
             : '·  ·  ·'}
         </div>
@@ -124,7 +135,7 @@ export default function TheWall() {
               if (text.startsWith('{"error"')) throw new Error()
               m.textContent = text
             } catch {
-              m.textContent = '[Faded from memory]'
+              m.textContent = 'no one chose to remember'
             }
           }
         }))
@@ -214,7 +225,7 @@ export default function TheWall() {
                 setMarks(prev => prev.map(p => p.blobId === m.blobId ? { ...p, textContent: text } : p))
               })
               .catch(() => {
-                setMarks(prev => prev.map(p => p.blobId === m.blobId ? { ...p, textContent: '[Faded from memory]' } : p))
+                setMarks(prev => prev.map(p => p.blobId === m.blobId ? { ...p, textContent: 'no one chose to remember' } : p))
               })
           }
         })
