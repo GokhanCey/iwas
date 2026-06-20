@@ -154,16 +154,13 @@ export default function TheWall() {
         const rng = seededRandom(m.blobId)
 
         // 1. Measure: Calculate footprint based on content
-        let reqWidth = 220
         let reqHeight = 220
 
         if (m.type === 'text') {
           if (m.textContent === 'no one chose to remember') {
-            reqWidth = 260
             reqHeight = 140
           } else {
             const textLen = m.textContent ? m.textContent.length : 0
-            reqWidth = Math.min(300, Math.max(180, textLen * 4.5))
             const lines = textLen ? Math.ceil(textLen / 25) : 1
             reqHeight = Math.max(120, lines * 35 + 80)
           }
