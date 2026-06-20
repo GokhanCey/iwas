@@ -113,6 +113,23 @@ export default function TheWall() {
       const TOTAL_H = Math.max(900, COUNT * MARK_SLOT + 400)
       const COLS = isMobile ? 2 : 4
 
+      // Fetch text contents FIRST so we can measure them for collision
+      if (!isMobile) {
+        await Promise.all(all.map(async (m) => {
+          if (m.type === 'text') {
+            try {
+              const r = await fetch(walrusBlobUrl(m.blobId))
+              if (!r.ok) throw new Error()
+              const text = await r.text()
+              if (text.startsWith('{"error"')) throw new Error()
+              m.textContent = text
+            } catch {
+              m.textContent = '[Faded from memory]'
+            }
+          }
+        }))
+      }
+
       const windowWidth = window.innerWidth
       const wallMarks: WallMark[] = []
 
@@ -150,10 +167,26 @@ export default function TheWall() {
           y = Math.max(180, Math.min(TOTAL_H - 120, slotY + jitter))
 
           collision = false
+          
+          // Dynamic collision box sizing based on content
+          const textLen = m.textContent ? m.textContent.length : 0
+          const reqWidth = m.type === 'text' ? Math.min(300, Math.max(180, textLen * 4.5)) : 180
+          const lines = textLen ? Math.ceil(textLen / 25) : 1
+          const reqHeight = m.type === 'text' ? Math.max(120, lines * 35 + 80) : 180
+
           for (const placed of wallMarks) {
             const dxPx = Math.abs((x - placed.x) / 100 * windowWidth)
             const dyPx = Math.abs(y - placed.y)
-            if (dxPx < 150 && dyPx < 200) {
+            
+            const placedLen = placed.textContent ? placed.textContent.length : 0
+            const placedWidth = placed.type === 'text' ? Math.min(300, Math.max(180, placedLen * 4.5)) : 180
+            const placedLines = placedLen ? Math.ceil(placedLen / 25) : 1
+            const placedHeight = placed.type === 'text' ? Math.max(120, placedLines * 35 + 80) : 180
+
+            const minDx = (reqWidth + placedWidth) / 2 + 50 // 50px extra horizontal buffer
+            const minDy = (reqHeight + placedHeight) / 2 + 60 // 60px extra vertical buffer
+            
+            if (dxPx < minDx && dyPx < minDy) {
               collision = true
               break
             }
@@ -165,25 +198,27 @@ export default function TheWall() {
       })
 
       setMaxHeight(TOTAL_H)
-
-      // Fetch text blobs for preview text
-      wallMarks.forEach(m => {
-        if (m.type === 'text') {
-          fetch(walrusBlobUrl(m.blobId))
-            .then(async r => {
-              if (!r.ok) throw new Error('not found')
-              const text = await r.text()
-              if (text.startsWith('{"error"')) throw new Error('walrus error')
-              return text
-            })
-            .then(text => {
-              setMarks(prev => prev.map(p => p.blobId === m.blobId ? { ...p, textContent: text } : p))
-            })
-            .catch(() => {
-              setMarks(prev => prev.map(p => p.blobId === m.blobId ? { ...p, textContent: '[Faded from memory]' } : p))
-            })
-        }
-      })
+      
+      // On mobile, we didn't pre-fetch text to save time since there's no collision logic, so fetch it now
+      if (isMobile) {
+        wallMarks.forEach(m => {
+          if (m.type === 'text') {
+            fetch(walrusBlobUrl(m.blobId))
+              .then(async r => {
+                if (!r.ok) throw new Error()
+                const text = await r.text()
+                if (text.startsWith('{"error"')) throw new Error()
+                return text
+              })
+              .then(text => {
+                setMarks(prev => prev.map(p => p.blobId === m.blobId ? { ...p, textContent: text } : p))
+              })
+              .catch(() => {
+                setMarks(prev => prev.map(p => p.blobId === m.blobId ? { ...p, textContent: '[Faded from memory]' } : p))
+              })
+          }
+        })
+      }
 
       setMarks(wallMarks)
     }
@@ -213,7 +248,7 @@ export default function TheWall() {
       >
         <div style={{
           position: 'absolute',
-          top: 32,
+          top: 100,
           width: '100%',
           textAlign: 'center',
           pointerEvents: 'none',
