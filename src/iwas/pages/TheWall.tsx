@@ -5,7 +5,7 @@ import { getAllMarks, type Mark } from '../utils/storage'
 import { walrusBlobUrl } from '../utils/walrus'
 import { useSuiClient } from '@mysten/dapp-kit'
 
-// Stable pseudo-random generator
+// simple seeded random
 function seededRandom(seedStr: string) {
   let hash = 0
   for (let i = 0; i < seedStr.length; i++) {
@@ -25,7 +25,7 @@ interface WallMark extends Mark {
   textContent?: string
 }
 
-// ── Inline hover component so we can use React state ──────────
+// wall item component
 function WallItem({ m, isMobile }: { m: WallMark, isMobile: boolean }) {
   const [hovered, setHovered] = useState(false)
 
@@ -126,7 +126,7 @@ export default function TheWall() {
 
       const wallMarks: WallMark[] = []
 
-      // Fetch text contents FIRST so we can measure them for layout sizing
+      // pre-fetch text for layout sizing
       if (!isMobile) {
         await Promise.all(all.map(async (m) => {
           if (m.type === 'text') {
@@ -143,8 +143,8 @@ export default function TheWall() {
         }))
       }
 
-      // Marks are already sorted by timestamp (newest first).
-      // We place them chronologically into the shortest available column.
+      // items are pre-sorted by newest
+      // place into shortest col
       all.forEach((m) => {
         if (isMobile) {
           wallMarks.push({ ...m, x: 50, y: 0, scale: 1, rotation: 0 })
@@ -153,7 +153,7 @@ export default function TheWall() {
 
         const rng = seededRandom(m.blobId)
 
-        // 1. Measure: Calculate footprint based on content
+        // calculate footprint
         let reqHeight = 220
 
         if (m.type === 'text') {
@@ -166,7 +166,7 @@ export default function TheWall() {
           }
         }
 
-        // 2. Find shortest column
+        // find shortest col
         let minCol = 0
         let minH = colHeights[0]
         for (let c = 1; c < COLS; c++) {
@@ -176,15 +176,15 @@ export default function TheWall() {
           }
         }
 
-        // 3. Place: Calculate Grid Cell center and add cosmetic jitter
+        // calculate cell and jitter
         const colWidthPct = 100 / COLS
         const baseX = (minCol * colWidthPct) + (colWidthPct / 2)
         
-        // Jitter within the column bounds (max +/- 20% of col width)
+        // add jitter
         const jitterX = (rng() - 0.5) * (colWidthPct * 0.4)
         const x = Math.max(5, Math.min(95, baseX + jitterX))
         
-        // y is the shortest column height + organic jitter (0 to 40px)
+        // y is shortest col + organic jitter
         const y = minH + (rng() * 40)
 
         const scale = 0.72 + rng() * 0.45
@@ -192,7 +192,7 @@ export default function TheWall() {
 
         wallMarks.push({ ...m, x, y, scale, rotation })
 
-        // 4. Update the column's height with the mark's true height + buffer
+        // update col height
         colHeights[minCol] = y + reqHeight + 40
       })
 

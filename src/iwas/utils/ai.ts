@@ -1,15 +1,8 @@
-/**
- * IWAS AI — Claude + MemWal integration
- *
- * Flow:
- *  1. categorizeWithClaude()  → emotion tag + narrative sentence
- *  2. storeInMemWal()         → remember() into Walrus-backed memory
- *  3. recallFromMemWal()      → semantic recall for MyMarks
- */
+
 import { MemWal } from '@mysten-incubation/memwal'
 import type { EmotionCategory } from './storage'
 
-// ── Env vars (Vite exposes VITE_* to the browser bundle) ──────
+// env vars
 const CLAUDE_API_KEY   = import.meta.env.VITE_CLAUDE_API_KEY   as string
 const MEMWAL_PRIVATE_KEY = import.meta.env.VITE_MEMWAL_PRIVATE_KEY as string
 const MEMWAL_ACCOUNT_ID  = import.meta.env.VITE_MEMWAL_ACCOUNT_ID  as string
@@ -20,7 +13,7 @@ const VALID_EMOTIONS: EmotionCategory[] = [
   'loneliness', 'joy', 'wonder', 'loss', 'rebellion', 'hope', 'love',
 ]
 
-// ── Singleton MemWal client ────────────────────────────────────
+// init memwal
 let _memwal: MemWal | null = null
 function getMemWal(): MemWal {
   if (!_memwal) {
@@ -34,17 +27,13 @@ function getMemWal(): MemWal {
   return _memwal
 }
 
-// ── Types ──────────────────────────────────────────────────────
+// types
 export interface AIResult {
   emotion:   EmotionCategory
   narrative: string
 }
 
-// ── Claude categorization ──────────────────────────────────────
-/**
- * Call Claude with the mark's content + user context.
- * Returns one of the 7 emotion tags and a short poetic sentence.
- */
+// get emotion tag and narrative from claude
 export async function categorizeWithClaude(
   markType:    string,
   textContent: string | null,
@@ -117,12 +106,7 @@ Respond with ONLY valid JSON — no markdown, no explanation:
   }
 }
 
-// ── MemWal write ───────────────────────────────────────────────
-/**
- * Store the AI result in MemWal as a semantic memory.
- * Format: "Blob <blobId>: emotion=<tag>. <narrative>"
- * Non-fatal — errors are logged but not re-thrown.
- */
+// store in memwal
 export async function storeInMemWal(blobId: string, result: AIResult): Promise<void> {
   try {
     const memwal = getMemWal()
@@ -134,12 +118,7 @@ export async function storeInMemWal(blobId: string, result: AIResult): Promise<v
   }
 }
 
-// ── MemWal read ────────────────────────────────────────────────
-/**
- * Recall IWAS AI memories from MemWal using semantic search.
- * Queries with known blobIds to surface the user's own marks first.
- * Returns raw memory texts (parse with parseMemWalMemory).
- */
+// search memwal
 export async function recallFromMemWal(blobIds: string[]): Promise<string[]> {
   try {
     const memwal = getMemWal()
@@ -155,11 +134,7 @@ export async function recallFromMemWal(blobIds: string[]): Promise<string[]> {
   }
 }
 
-// ── Parse MemWal memory text ───────────────────────────────────
-/**
- * Parse "Blob <blobId>: emotion=<tag>. <narrative>" back into parts.
- * Returns null if the text doesn't match the format.
- */
+// parse memory text
 export function parseMemWalMemory(text: string): {
   blobId:    string
   emotion:   string

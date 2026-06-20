@@ -24,9 +24,8 @@ export interface Mark {
   threadBlobId?: string
 }
 
-// Map the on-chain data back to the Mark interface.
-// Since our simple contract doesn't store type/mimeType/context/narrative on-chain,
-// we will provide defaults or infer them where possible.
+// map on-chain data
+// use defaults since contract doesn't store full metadata
 function mapOnChainMark(data: any): Mark {
   return {
     blobId: data.blob_id,
@@ -48,9 +47,9 @@ export async function getAllMarks(suiClient: SuiClient): Promise<Mark[]> {
     
     const content = res.data?.content as any
     if (content && content.fields && content.fields.marks) {
-      // The on-chain vector is an array of objects
+      // parse array
       const rawMarks = content.fields.marks as any[]
-      // Reverse to show newest first
+      // reverse order
       return rawMarks.map(m => mapOnChainMark(m.fields || m)).reverse()
     }
     return []
@@ -70,7 +69,7 @@ export async function getMarkById(suiClient: SuiClient, blobId: string): Promise
   return all.find((m) => m.blobId === blobId)
 }
 
-// Builds the transaction block for adding a mark
+// build tx block
 export function buildAddMarkTx(
   blobId: string,
   markType: string,

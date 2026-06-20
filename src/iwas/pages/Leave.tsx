@@ -31,7 +31,7 @@ export default function Leave() {
   const brushSize     = useRef(8)
   const [brushColor, setBrushColor] = useState('#D9C5A0') // earthy ochre/bone
 
-  // ── Drawing canvas ───────────────────────────────────────────
+  // canvas logic
   const getCanvasPos = (e: React.MouseEvent | React.TouchEvent, canvas: HTMLCanvasElement) => {
     const rect   = canvas.getBoundingClientRect()
     const scaleX = canvas.width  / rect.width
@@ -116,12 +116,12 @@ export default function Leave() {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
   }
 
-  // ── Has content? ─────────────────────────────────────────────
+  // check if has content
   const hasContent =
     (mode === 'text'    && textContent.trim().length > 0) ||
     (mode === 'drawing')
 
-  // ── Stamp ────────────────────────────────────────────────────
+  // handle stamp
   const handleStamp = async () => {
     if (!account) return
     setIsStamping(true)
@@ -144,11 +144,11 @@ export default function Leave() {
         return
       }
 
-      // Step 1 — upload to Walrus
+      // upload to walrus
       setStampStatus('Uploading to Walrus...')
       const blobId = await uploadToWalrus(blob)
 
-      // Step 2 — call Claude for emotion + narrative
+      // fetch ai emotion
       setStampStatus('IWAS AI is reading your mark...')
       const result = await categorizeWithClaude(
         markType,
@@ -157,11 +157,11 @@ export default function Leave() {
       )
       setAiResult(result)
 
-      // Step 3 — store in MemWal (async, non-blocking for UX)
+      // store memory
       setStampStatus('Storing in memory...')
       storeInMemWal(blobId, result).catch(console.warn)
 
-      // Step 4 — persist to Sui blockchain
+      // save to chain
       setStampStatus('Engraving on The Wall...')
       const tx = buildAddMarkTx(blobId, markType, result.emotion, Date.now())
       await signAndExecuteTransaction({ transaction: tx as any })
@@ -176,7 +176,7 @@ export default function Leave() {
     }
   }
 
-  // ── Gate: wallet ─────────────────────────────────────────────
+  // check wallet
   if (!account) {
     return (
       <div className="iwas-root">
@@ -194,7 +194,7 @@ export default function Leave() {
     )
   }
 
-  // ── Success screen ───────────────────────────────────────────
+  // success UI
   if (stampedBlobId) {
     return (
       <div className="iwas-root">
@@ -252,7 +252,7 @@ export default function Leave() {
     )
   }
 
-  // ── Main leave form ──────────────────────────────────────────
+  // leave mark form
   return (
     <div className="iwas-root">
       <Nav />
