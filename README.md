@@ -4,13 +4,17 @@ A wall where people leave marks. You write a text or draw a picture, and it gets
 
 ### Links
 
-- [Demo video](#)
-- [Live site (iwas.app)](https://iwas.app)
-- [Hackathon submission](#)
+- **Live site:** [iwas.app](https://iwas.app)
+- **GitHub:** [GokhanCey/iwas](https://github.com/GokhanCey/iwas)
+- **X (Twitter):** [@gokhanceylan](https://x.com/gokhanceylan)
 
 ### How it works
 
-Walrus stores the marks as permanent data blobs. Every time a mark is left, IWAS AI reads it to understand the emotion behind it. MemWal remembers these emotions across sessions. The Wall pulls everything together into a collective canvas. A Sui smart contract indexes every mark globally so strangers can see each other's marks.
+Walrus stores the marks as permanent data blobs. Every time a mark is left, IWAS AI (Claude) reads it to understand the emotion behind it. MemWal remembers these emotions across sessions. The Wall pulls everything together into a collective canvas. A Sui smart contract indexes every mark globally so strangers can see each other's marks.
+
+### Architecture
+
+![IWAS System Architecture](./system-architecture-iwas.png)
 
 ### Stack
 
@@ -33,11 +37,11 @@ Wall Object ID: `0xa9b8f6be4757fe9cbb5ca714d28f4d1416ad3772e6337432ef7a8f6652a22
 
 ### How we used the stack
 
-**Walrus:** every mark is stored as a blob on Walrus testnet. the blobId is the mark's permanent identity. nothing gets deleted.
+**Walrus:** every mark is stored as a blob on Walrus testnet. the blobId is the mark's permanent identity. nothing gets deleted. expired text blobs naturally "fade" into eroded memories on the wall.
 
-**MemWal:** after IWAS AI reads a mark, the emotion and narrative get written to MemWal. this makes the memory cross-device and permanent. even if you clear your browser, the wall remembers.
+**MemWal:** after IWAS AI reads a mark, the emotion and narrative get written to MemWal. this makes the semantic memory permanent and indexable.
 
-**IWAS AI:** Claude reads every mark and returns one emotion out of seven and one poetic sentence. the output gets committed to MemWal alongside the blob. nothing is mocked.
+**IWAS AI:** the frontend sends the mark to Claude, which returns one emotion out of seven and one poetic narrative sentence. the output gets committed to MemWal alongside the blob. nothing is mocked.
 
 **Sui:** a Move smart contract indexes every mark on-chain. the wallet signs a transaction on every upload. the wall is global.
 
