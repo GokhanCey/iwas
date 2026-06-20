@@ -116,7 +116,8 @@ export default function TheWall() {
 
   useEffect(() => {
     async function loadMarks() {
-      let all = await getAllMarks(suiClient)
+      let rawMarks = await getAllMarks(suiClient)
+      let all = rawMarks as (Mark & { textContent?: string })[]
       all.sort((a, b) => b.timestamp - a.timestamp)
 
       const COUNT = all.length
