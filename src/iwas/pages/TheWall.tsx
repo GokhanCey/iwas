@@ -126,6 +126,23 @@ export default function TheWall() {
 
       const wallMarks: WallMark[] = []
 
+      // Fetch text contents FIRST so we can measure them for layout sizing
+      if (!isMobile) {
+        await Promise.all(all.map(async (m) => {
+          if (m.type === 'text') {
+            try {
+              const r = await fetch(walrusBlobUrl(m.blobId))
+              if (!r.ok) throw new Error()
+              const text = await r.text()
+              if (text.startsWith('{"error"')) throw new Error()
+              m.textContent = text
+            } catch {
+              m.textContent = 'no one chose to remember'
+            }
+          }
+        }))
+      }
+
       // Marks are already sorted by timestamp (newest first).
       // We place them chronologically into the shortest available column.
       all.forEach((m) => {
