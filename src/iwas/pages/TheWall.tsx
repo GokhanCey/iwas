@@ -122,7 +122,7 @@ export default function TheWall() {
 
       const windowWidth = window.innerWidth
       const COLS = isMobile ? 1 : Math.max(2, Math.floor(windowWidth / 350))
-      const colHeights = new Array(COLS).fill(180) // 180px top padding
+      const colHeights = new Array(COLS).fill(280) // 280px top padding to leave breathing room below the title
 
       const wallMarks: WallMark[] = []
 
