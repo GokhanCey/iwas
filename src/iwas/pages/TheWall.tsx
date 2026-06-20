@@ -128,7 +128,7 @@ export default function TheWall() {
 
       // Marks are already sorted by timestamp (newest first).
       // We place them chronologically into the shortest available column.
-      all.forEach((m, i) => {
+      all.forEach((m) => {
         if (isMobile) {
           wallMarks.push({ ...m, x: 50, y: 0, scale: 1, rotation: 0 })
           return
@@ -138,7 +138,6 @@ export default function TheWall() {
 
         // 1. Measure: Calculate footprint based on content
         const textLen = m.textContent ? m.textContent.length : 0
-        const reqWidth = m.type === 'text' ? Math.min(300, Math.max(180, textLen * 4.5)) : 220
         const lines = textLen ? Math.ceil(textLen / 25) : 1
         const reqHeight = m.type === 'text' ? Math.max(120, lines * 35 + 80) : 220
 
