@@ -6,7 +6,7 @@ A wall where people leave marks. You write a text or draw a picture, and it gets
 
 - **Live site:** [iwas.app](https://iwas.app)
 - **GitHub:** [GokhanCey/iwas](https://github.com/GokhanCey/iwas)
-- **X (Twitter):** [@gokhanceylan](https://x.com/gokhanceylan)
+- **X (Twitter):** [@iwas_app](https://x.com/iwas_app)
 
 ### How it works
 
