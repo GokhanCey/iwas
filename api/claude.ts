@@ -2,6 +2,9 @@ export const config = {
   runtime: 'edge',
 }
 
+// In-memory map for basic IP rate limiting on Edge
+const rateLimitMap = new Map<string, { count: number, resetAt: number }>()
+
 export default async function handler(req: Request) {
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
@@ -9,6 +12,29 @@ export default async function handler(req: Request) {
       headers: { 'Content-Type': 'application/json' },
     })
   }
+
+  // --- RATE LIMITING ---
+  const ip = req.headers.get('x-forwarded-for') || 'unknown'
+  const now = Date.now()
+  const record = rateLimitMap.get(ip)
+
+  if (record) {
+    if (now > record.resetAt) {
+      // Reset window (24 hours)
+      rateLimitMap.set(ip, { count: 1, resetAt: now + 24 * 60 * 60 * 1000 })
+    } else {
+      if (record.count >= 10) {
+        return new Response(JSON.stringify({ error: 'Too Many Requests. Limit reached.' }), {
+          status: 429,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+      record.count += 1
+    }
+  } else {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + 24 * 60 * 60 * 1000 })
+  }
+  // --- END RATE LIMITING ---
 
   const { prompt } = await req.json()
 

@@ -23,6 +23,21 @@ export default function Leave() {
   const [stampStatus,   setStampStatus]   = useState('')
   const [stampedBlobId, setStampedBlobId] = useState<string | null>(null)
   const [aiResult,      setAiResult]      = useState<AIResult | null>(null)
+  const [textsLeftToday, setTextsLeftToday] = useState<number>(3)
+
+  useEffect(() => {
+    const data = localStorage.getItem('iwas-text-limit')
+    if (data) {
+      try {
+        const parsed = JSON.parse(data)
+        if (Date.now() > parsed.resetAt) {
+          localStorage.removeItem('iwas-text-limit')
+        } else {
+          setTextsLeftToday(Math.max(0, 3 - parsed.count))
+        }
+      } catch (e) {}
+    }
+  }, [])
 
   const canvasRef     = useRef<HTMLCanvasElement | null>(null)
   const drawing       = useRef(false)
@@ -124,6 +139,10 @@ export default function Leave() {
   // handle stamp
   const handleStamp = async () => {
     if (!account) return
+    if (mode === 'text' && textsLeftToday <= 0) {
+      alert("You have left enough text marks for today. Come back tomorrow, or leave a drawing.")
+      return
+    }
     setIsStamping(true)
 
     try {
@@ -165,6 +184,23 @@ export default function Leave() {
       setStampStatus('Engraving on The Wall...')
       const tx = buildAddMarkTx(blobId, markType, result.emotion, Date.now())
       await signAndExecuteTransaction({ transaction: tx as any })
+
+      if (mode === 'text') {
+        const data = localStorage.getItem('iwas-text-limit')
+        let count = 1
+        let resetAt = Date.now() + 24 * 60 * 60 * 1000
+        if (data) {
+          try {
+            const parsed = JSON.parse(data)
+            if (Date.now() <= parsed.resetAt) {
+              count = parsed.count + 1
+              resetAt = parsed.resetAt
+            }
+          } catch(e) {}
+        }
+        localStorage.setItem('iwas-text-limit', JSON.stringify({ count, resetAt }))
+        setTextsLeftToday(Math.max(0, 3 - count))
+      }
 
       setStampedBlobId(blobId)
     } catch (err) {
@@ -409,15 +445,24 @@ export default function Leave() {
 
         {/* Stamp button */}
         {mode !== null && hasContent && (
-          <button
-            className="btn-ochre primary"
-            onClick={handleStamp}
-            disabled={isStamping}
-          >
-            {isStamping
-              ? (stampStatus || 'Working...')
-              : 'Leave your mark'}
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            <button
+              className="btn-ochre primary"
+              onClick={handleStamp}
+              disabled={isStamping || (mode === 'text' && textsLeftToday <= 0)}
+            >
+              {isStamping
+                ? (stampStatus || 'Working...')
+                : mode === 'text' && textsLeftToday <= 0
+                  ? 'Text limit reached'
+                  : 'Leave your mark'}
+            </button>
+            {mode === 'text' && textsLeftToday > 0 && (
+              <span style={{ fontSize: 12, color: 'var(--bone-dim)' }}>
+                {textsLeftToday} text mark{textsLeftToday !== 1 ? 's' : ''} left today
+              </span>
+            )}
+          </div>
         )}
 
         {/* Step indicator during stamping */}
