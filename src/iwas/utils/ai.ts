@@ -3,7 +3,7 @@ import { MemWal } from '@mysten-incubation/memwal'
 import type { EmotionCategory } from './storage'
 
 // env vars
-const CLAUDE_API_KEY   = import.meta.env.VITE_CLAUDE_API_KEY   as string
+// Note: CLAUDE_API_KEY has been moved to backend environment variables securely.
 const MEMWAL_PRIVATE_KEY = import.meta.env.VITE_MEMWAL_PRIVATE_KEY as string
 const MEMWAL_ACCOUNT_ID  = import.meta.env.VITE_MEMWAL_ACCOUNT_ID  as string
 const MEMWAL_SERVER_URL  = 'https://relayer.memwal.ai'
@@ -39,6 +39,14 @@ export async function categorizeWithClaude(
   textContent: string | null,
   userContext: string | null,
 ): Promise<AIResult> {
+  // If it's a drawing, skip Claude completely to save costs
+  if (markType === 'drawing') {
+    return {
+      emotion: 'wonder',
+      narrative: 'A silent shape left in the permanence of now.',
+    }
+  }
+
   const contentLine = textContent
     ? `The mark contains this text: "${textContent.slice(0, 600)}"`
     : `The mark is a ${markType} (no readable text — treat it as a silent gesture).`
@@ -60,24 +68,17 @@ Your task:
 Respond with ONLY valid JSON — no markdown, no explanation:
 {"emotion":"<one of the 7>","narrative":"<sentence>"}`
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetch('/api/claude', {
     method: 'POST',
     headers: {
-      'x-api-key':                              CLAUDE_API_KEY,
-      'anthropic-version':                      '2023-06-01',
-      'content-type':                           'application/json',
-      'anthropic-dangerous-direct-browser-access': 'true',
+      'content-type': 'application/json',
     },
-    body: JSON.stringify({
-      model:      'claude-sonnet-4-6',
-      max_tokens: 120,
-      messages:   [{ role: 'user', content: prompt }],
-    }),
+    body: JSON.stringify({ prompt }),
   })
 
   if (!res.ok) {
     const errText = await res.text().catch(() => '')
-    throw new Error(`Claude API ${res.status}: ${errText.slice(0, 200)}`)
+    throw new Error(`Claude API Proxy ${res.status}: ${errText.slice(0, 200)}`)
   }
 
   const data = await res.json()
